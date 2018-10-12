@@ -2,54 +2,45 @@ package com.stackroute.keepnote.dao;
 
 import java.util.List;
 
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-
 import com.stackroute.keepnote.model.Note;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
-
-import javax.persistence.Query;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.transaction.Transactional;
 
 /*
  * This class is implementing the NoteDAO interface. This class has to be annotated with @Repository
  * annotation.
- * @Repository - is an annotation that marks the specific class as a Data Access Object, thus 
+ * @Repository - is an annotation that marks the specific class as a Data Access Object, thus
  * 				 clarifying it's role.
- * @Transactional - The transactional annotation itself defines the scope of a single database 
- * 					transaction. The database transaction happens inside the scope of a persistence 
- * 					context.  
+ * @Transactional - The transactional annotation itself defines the scope of a single database
+ * 					transaction. The database transaction happens inside the scope of a persistence
+ * 					context.
  * */
 @Repository
 @Transactional
-
 public class NoteDAOImpl implements NoteDAO {
 
+	//@Autowired
+	//private entityManager entityManager;
+	@PersistenceContext
+	private EntityManager entityManager;
 	/*
-	 * Autowiring should be implemented for the SessionFactory.
+	 * Autowiring should be implemented for the entityManager.
 	 */
-	@Autowired
-	SessionFactory sessionFactory;
-	public NoteDAOImpl(SessionFactory sessionFactory) {
-		this.sessionFactory=sessionFactory;
+
+	public NoteDAOImpl(EntityManager entityManager) {
+		this.entityManager = entityManager;
 	}
 
-	public SessionFactory getSessionFactory() {
-		return sessionFactory;
-	}
-
-	public void setSessionFactory(SessionFactory sessionFactory) {
-		this.sessionFactory = sessionFactory;
-	}
 	/*
 	 * Save the note in the database(note) table.
 	 */
 
-	public boolean saveNote(Note note) {
-		Session session = sessionFactory.getCurrentSession();
-		session.save(note);
-		session.flush();
+	public boolean saveNote(Note note)
+	{
+		entityManager.persist(note);
+		entityManager.flush();
 		return true;
 	}
 
@@ -57,57 +48,38 @@ public class NoteDAOImpl implements NoteDAO {
 	 * Remove the note from the database(note) table.
 	 */
 
-	public boolean deleteNote(int noteId) {
-		if(getNoteById(noteId)==null) {
-			return false;
-		}
-		else {
-			Session session = sessionFactory.getCurrentSession();
-			session.delete(getNoteById(noteId));
-			session.flush();
-			return true;
-		}
+	public boolean deleteNote(int noteId)
+	{
+		entityManager.remove(getNoteById(noteId));
+		entityManager.flush();
+		return true;
 	}
 
 	/*
 	 * retrieve all existing notes sorted by created Date in descending
 	 * order(showing latest note first)
 	 */
-	public List<Note> getAllNotes() {
-		String hqlQuery = "FROM Note note ORDER BY note.createdAt DESC";
-		Query query = getSessionFactory().getCurrentSession().createQuery(hqlQuery);
-		List result = query.getResultList();
-		return result;
-
-
+	public List<Note> getAllNotes()
+	{
+		return entityManager.createQuery("FROM Note ORDER BY DATE DESC").getResultList();
 	}
 
 	/*
 	 * retrieve specific note from the database(note) table
 	 */
-	public Note getNoteById(int noteId) {
-		Session session = sessionFactory.getCurrentSession();
-		Note note =session.get(Note.class, noteId);
-		session.flush();
-		return note;
-
+	public Note getNoteById(int noteId)
+	{
+		List<Note> answer = entityManager.createQuery("FROM Note WHERE Id = " + noteId).getResultList();
+		return answer.get(0);
 
 	}
 
 	/* Update existing note */
 
-	public boolean UpdateNote(Note note) {
-		if(getNoteById(note.getNoteId())==null) {
-			return false;
-		}
-		else {
-			sessionFactory.getCurrentSession().clear();
-			sessionFactory.getCurrentSession().update(note);
-			sessionFactory.getCurrentSession().flush();
-			return true;
-		}
-
-
+	public boolean UpdateNote(Note note)
+	{
+	    entityManager.merge(note);
+		return true;
 	}
 
 }

@@ -113,7 +113,8 @@ public class NoteController {
 	@RequestMapping("/updateNote")
 	public String update(ModelMap modelMap,@RequestParam int noteId) {
 		modelMap.addAttribute("note", dao.getNoteById(noteId));
-		return "update";
+		return "redirect:/";
 
 	}
+
 }

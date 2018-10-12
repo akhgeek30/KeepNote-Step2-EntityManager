@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
  * process of looking through that particular Java object to recreate it as a table in your database.
  */
 @Entity
+@Table(name = "Note")
 public class Note {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
